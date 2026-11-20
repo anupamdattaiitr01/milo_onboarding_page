@@ -50,13 +50,6 @@ class _LoginPageState extends State<LoginPage> {
     _authCubit.sendOtp(_phoneController.text);
   }
 
-  void _fillDemoNumber() {
-    _phoneController.value = const TextEditingValue(
-      text: '98765  43210',
-      selection: TextSelection.collapsed(offset: 12),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<AuthCubit, AuthState>(
@@ -283,44 +276,6 @@ class _LoginPageState extends State<LoginPage> {
                                   fontWeight: FontWeight.w700,
                                   letterSpacing: 0.3,
                                 ),
-                              ),
-                            ),
-                          ),
-
-                          const SizedBox(height: 18),
-
-                          // Subtle Demo Helper Pill
-                          GestureDetector(
-                            onTap: isLoading ? null : _fillDemoNumber,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 6,
-                              ),
-                              decoration: BoxDecoration(
-                                color: AppColors.cardSurface,
-                                borderRadius: BorderRadius.circular(20),
-                                border:
-                                Border.all(color: AppColors.borderSubtle),
-                              ),
-                              child: const Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    Icons.bolt_rounded,
-                                    color: AppColors.incomeGold,
-                                    size: 14,
-                                  ),
-                                  SizedBox(width: 5),
-                                  Text(
-                                    'Demo Test Number: +91 98765 43210',
-                                    style: TextStyle(
-                                      color: AppColors.textSecondary,
-                                      fontSize: 11.5,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ],
                               ),
                             ),
                           ),
