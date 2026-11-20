@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "59177251504",
+    "firebase_url": "https://milo-driver-onboarding-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "milo-driver-onboarding",
+    "storage_bucket": "milo-driver-onboarding.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:59177251504:android:0622554c4593b378688175",
+        "android_client_info": {
+          "package_name": "com.example.flutter_application_1"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyArnZZlRWgY4LX_jgffFYl5NFa1-LPgjp4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
