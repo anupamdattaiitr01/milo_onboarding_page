@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/logout_confirmation_dialog.dart';
 import '../../../auth/presentation/bloc/auth_cubit.dart';
 import '../../../auth/presentation/widgets/milo_brand_logo.dart';
 import '../../domain/entities/earning_scheme.dart';
@@ -232,10 +233,13 @@ class _OnboardingPlansPageState extends State<OnboardingPlansPage> {
                     children: [
                       // Left Logout / Exit Icon Button
                       GestureDetector(
-                        onTap: () {
-                          _onboardingCubit.clear();
-                          _authCubit.signOut();
-                        },
+                        onTap: () => showLogoutConfirmationDialog(
+                          context,
+                          onConfirmLogout: () {
+                            _onboardingCubit.clear();
+                            _authCubit.signOut();
+                          },
+                        ),
                         child: Container(
                           width: 40,
                           height: 40,

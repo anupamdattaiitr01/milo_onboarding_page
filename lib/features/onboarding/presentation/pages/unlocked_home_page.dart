@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/logout_confirmation_dialog.dart';
 import '../../../auth/presentation/bloc/auth_cubit.dart';
 import '../../../onboarding/domain/entities/earning_scheme.dart';
 import '../../../onboarding/presentation/bloc/onboarding_cubit.dart';
@@ -29,10 +30,13 @@ class UnlockedHomePage extends StatelessWidget {
               IconButton(
                 tooltip: 'Sign Out',
                 icon: const Icon(Icons.logout_rounded),
-                onPressed: () {
-                  onboardingCubit.clear();
-                  authCubit.signOut();
-                },
+                onPressed: () => showLogoutConfirmationDialog(
+                  context,
+                  onConfirmLogout: () {
+                    onboardingCubit.clear();
+                    authCubit.signOut();
+                  },
+                ),
               ),
             ],
           ),

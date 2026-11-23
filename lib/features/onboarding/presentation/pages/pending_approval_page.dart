@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/logout_confirmation_dialog.dart';
 import '../../../auth/presentation/bloc/auth_cubit.dart';
 import '../../domain/entities/earning_scheme.dart';
 import '../bloc/onboarding_cubit.dart';
@@ -69,10 +70,13 @@ class PendingApprovalPage extends StatelessWidget {
                         ),
                       ),
                       GestureDetector(
-                        onTap: () {
-                          onboardingCubit.clear();
-                          authCubit.signOut();
-                        },
+                        onTap: () => showLogoutConfirmationDialog(
+                          context,
+                          onConfirmLogout: () {
+                            onboardingCubit.clear();
+                            authCubit.signOut();
+                          },
+                        ),
                         child: const Icon(
                           Icons.logout_rounded,
                           color: AppColors.textSecondary,
