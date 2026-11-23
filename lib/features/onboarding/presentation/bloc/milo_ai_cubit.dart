@@ -7,16 +7,18 @@ enum AiLanguage { english, hinglish }
 class AiChatMessage extends Equatable {
   final String text;
   final bool isUser;
+  final String? recommendedPlanId;
   final DateTime timestamp;
 
   const AiChatMessage({
     required this.text,
     required this.isUser,
+    this.recommendedPlanId,
     required this.timestamp,
   });
 
   @override
-  List<Object?> get props => [text, isUser, timestamp];
+  List<Object?> get props => [text, isUser, recommendedPlanId, timestamp];
 }
 
 class MiloAiState extends Equatable {
@@ -42,6 +44,13 @@ class MiloAiState extends Equatable {
   List<Object?> get props => [language, messages];
 }
 
+class _GeneratedAiReply {
+  final String text;
+  final String? recommendedPlanId;
+
+  const _GeneratedAiReply(this.text, {this.recommendedPlanId});
+}
+
 class MiloAiCubit extends Cubit<MiloAiState> {
   MiloAiCubit()
       : super(
@@ -50,7 +59,7 @@ class MiloAiCubit extends Cubit<MiloAiState> {
       messages: [
         AiChatMessage(
           text:
-          'Namaste Anupam! I am Milo Saathi AI. Ask me anything about Salary, Rental, or Drive-to-Own plans, security deposits, or your daily take-home earnings.',
+          'Hi! I am **Milo Saathi AI** 🤖⚡\n\nAsk me anything about daily/weekly take-home earnings, the Salary ₹2k–3k deposit exception, EV charging, or owning your car with **DTO**.',
           isUser: false,
           timestamp: DateTime.now(),
         ),
@@ -61,8 +70,8 @@ class MiloAiCubit extends Cubit<MiloAiState> {
   void switchLanguage(AiLanguage newLang) {
     if (state.language == newLang) return;
     final greeting = newLang == AiLanguage.english
-        ? 'Switched to English. How can I help you compare Milo plans?'
-        : 'Hinglish mode chalu ho gaya hai! Aap Salary, Rental, ya Drive-to-Own plan ke baare mein kuch bhi pooch sakte hain.';
+        ? 'Switched to **English**. Ask me anything about take-home earnings, deposits, or **DTO** ownership!'
+        : '**Hinglish** mode chalu ho gaya hai! Aap daily/weekly kamai, ₹2k–3k deposit exception, ya **DTO** ke baare mein pooch sakte hain.';
 
     emit(
       state.copyWith(
@@ -89,22 +98,23 @@ class MiloAiCubit extends Cubit<MiloAiState> {
       timestamp: DateTime.now(),
     );
 
-    final replyText = _generateReply(
+    final reply = _generateReply(
       trimmed.toLowerCase(),
       dailyEstimate: currentDailyEstimate,
       isHinglish: state.language == AiLanguage.hinglish,
     );
 
     final botMsg = AiChatMessage(
-      text: replyText,
+      text: reply.text,
       isUser: false,
+      recommendedPlanId: reply.recommendedPlanId,
       timestamp: DateTime.now(),
     );
 
     emit(state.copyWith(messages: [...state.messages, userMsg, botMsg]));
   }
 
-  String _generateReply(
+  _GeneratedAiReply _generateReply(
       String q, {
         required double dailyEstimate,
         required bool isHinglish,
@@ -113,49 +123,70 @@ class MiloAiCubit extends Cubit<MiloAiState> {
     final rental = EarningScheme.byId('RENTAL');
     final dto = EarningScheme.byId('DTO');
 
-    final est = dailyEstimate.round();
-    final salDaily = salary.calculateDailyTakeHome(dailyEstimate);
-    final renDaily = rental.calculateDailyTakeHome(dailyEstimate);
-    final dtoWeekly = dto.calculateWeeklyTakeHome(dailyEstimate);
+    final estStr = EarningScheme.formatRupees(dailyEstimate);
+    final salDailyStr =
+    EarningScheme.formatRupees(salary.calculateDailyTakeHome(dailyEstimate));
+    final renDailyStr =
+    EarningScheme.formatRupees(rental.calculateDailyTakeHome(dailyEstimate));
+    final dtoWeeklyStr =
+    EarningScheme.formatRupees(dto.calculateWeeklyTakeHome(dailyEstimate));
 
-    // 1. Income / Calculation Query
+    // 1. Highest Income / Earnings Comparison
     if (q.contains('earn') ||
         q.contains('income') ||
+        q.contains('highest') ||
         q.contains('kamai') ||
         q.contains('kitna') ||
         q.contains('calculate')) {
-      return isHinglish
-          ? 'Agar aap roz ₹$est ki rides karte hain:\n'
-          '• Rental Model: ~₹$renDaily/din (sabse zyada cash take-home)\n'
-          '• Salary Model: ~₹$salDaily/din (zero charging tension)\n'
-          '• Drive to Own: ~₹$dtoWeekly/hafta + gaadi aapki hoti jayegi!'
-          : 'At ₹$est/day in gross rides, your estimated net take-home is:\n'
-          '• Rental Model: ~₹$renDaily/day (highest daily cash surplus)\n'
-          '• Salary Model: ~₹$salDaily/day (with ₹0 charging/service cost)\n'
-          '• Drive to Own: ~₹$dtoWeekly/week after ₹15,000 EMI + vehicle ownership equity.';
+      return _GeneratedAiReply(
+        isHinglish
+            ? '💰 **$estStr/day** rides par aapki take-home kamai:\n\n'
+            '1. **Rental Model:** ₹1,400/day ke upar 100% aapka → **$renDailyStr/day**.\n'
+            '2. **Drive to Own (DTO):** ₹15,000/wk EMI ke upar → **$dtoWeeklyStr/wk** PLUS **100% Car Ownership!**\n'
+            '3. **Salary Model:** **$salDailyStr/day** aur ₹0 fuel & maintenance kharcha.'
+            : '💰 **Take-home comparison at $estStr/day rides:**\n\n'
+            '1. **Rental Model:** Keep 100% above ₹1,400/day → **$renDailyStr/day**.\n'
+            '2. **Drive to Own (DTO):** Keep excess above ₹15,000/wk EMI → **$dtoWeeklyStr/wk** PLUS **100% Car Ownership!**\n'
+            '3. **Salary Model:** **$salDailyStr/day** with **₹0 fuel & maintenance costs.**',
+        recommendedPlanId: 'RENTAL',
+      );
     }
 
-    // 2. Deposit Query
-    if (q.contains('deposit') || q.contains('jama') || q.contains('security')) {
-      return isHinglish
-          ? 'Security Deposit details:\n'
-          '• Salary Model: ₹6,000 (Hub approval par ₹2k–₹3k exception bhi mil sakta hai)\n'
-          '• Rental Model: ₹10,000 (refundable)\n'
-          '• Drive to Own: ₹40,000 (one-time ownership deposit)'
-          : 'Security deposit requirements by plan:\n'
-          '• Salary Model: ₹6,000 (₹2k–₹3k hub exception available)\n'
-          '• Rental Model: ₹10,000 (refundable on return)\n'
-          '• Drive to Own: ₹40,000 (one-time ownership down payment)';
+    // 2. Deposit / Exception Query
+    if (q.contains('deposit') ||
+        q.contains('2k') ||
+        q.contains('3k') ||
+        q.contains('exception') ||
+        q.contains('jama')) {
+      return _GeneratedAiReply(
+        isHinglish
+            ? '🛡️ **Security Deposit & Hub Exception:**\n\n'
+            '• **Salary Model:** Standard deposit **₹6,000** hai, lekin Hub Ops approval par **₹2,000–₹3,000** ka flex exception mil sakta hai.\n'
+            '• **Rental Model:** **₹10,000** (100% refundable).\n'
+            '• **Drive to Own:** **₹40,000** one-time down payment.'
+            : '🛡️ **Security Deposit & Hub Exception:**\n\n'
+            '• **Salary Model:** Standard deposit is **₹6,000**, with a **₹2k–3k flex exception** available at Hub Ops.\n'
+            '• **Rental Model:** **₹10,000** (100% refundable).\n'
+            '• **Drive to Own:** **₹40,000** one-time down payment.',
+        recommendedPlanId: 'SALARY',
+      );
     }
 
     // 3. Charging & Maintenance Query
     if (q.contains('charg') ||
         q.contains('maint') ||
-        q.contains('service') ||
-        q.contains('kharcha')) {
-      return isHinglish
-          ? 'Salary Model mein EV charging aur maintenance ka 100% kharcha Milo uthata hai (₹0 driver cost). Rental aur Drive-to-Own mein charging aur routine maintenance driver khud pay karta hai.'
-          : 'In the Salary Model, Milo covers 100% of EV charging and maintenance (₹0 cost to you). In Rental and Drive-to-Own, charging and routine maintenance are paid by the driver.';
+        q.contains('fuel') ||
+        q.contains('service')) {
+      return _GeneratedAiReply(
+        isHinglish
+            ? '⚡ **Charging & Maintenance:**\n\n'
+            '• **Salary Model:** **₹0** driver cost — poori EV charging aur maintenance Milo cover karta hai.\n'
+            '• **Rental & DTO:** Charging aur routine maintenance driver khud pay karta hai.'
+            : '⚡ **Charging & Maintenance:**\n\n'
+            '• **Salary Model:** **₹0** driver cost — Milo covers 100% of EV charging and servicing.\n'
+            '• **Rental & DTO:** Charging and routine maintenance are driver-paid.',
+        recommendedPlanId: 'SALARY',
+      );
     }
 
     // 4. Drive to Own Query
@@ -163,20 +194,30 @@ class MiloAiCubit extends Cubit<MiloAiState> {
         q.contains('dto') ||
         q.contains('emi') ||
         q.contains('malik')) {
-      return isHinglish
-          ? 'Drive to Own mein ₹40,000 deposit aur ₹15,000/hafte ki EMI lagti hai. EMI ke upar ki saari ride kamai aapki hai, aur poori EMI complete hone par gaadi ki RC aapke naam transfer ho jati hai.'
-          : 'Drive to Own requires a ₹40,000 deposit and ₹15,000/week EMI. You keep all ride earnings above the weekly EMI, and full vehicle ownership transfers to you upon completing repayment.';
+      return _GeneratedAiReply(
+        isHinglish
+            ? '🚘 **Drive to Own (DTO):**\n\n'
+            '• **₹40,000** down payment aur **₹15,000/week** EMI bharein.\n'
+            '• EMI ke upar ki saari kamai (**$dtoWeeklyStr/wk**) aapki hai, aur term poora hone par **100% RC Transfer** aapke naam hoga.'
+            : '🚘 **Drive to Own (DTO):**\n\n'
+            '• Pay **₹40,000** down payment and **₹15,000/week** EMI.\n'
+            '• Keep all surplus ride earnings (**$dtoWeeklyStr/wk**) and get **100% RC Transfer** at term end.',
+        recommendedPlanId: 'DTO',
+      );
     }
 
     // 5. Default Recommendation
-    return isHinglish
-        ? 'Best plan aapke goal par depend karta hai:\n'
-        '• Bina kisi risk aur charging kharche ke kaam karna hai -> Salary Model (₹6,000 deposit)\n'
-        '• Rozana sabse zyada cash kamana hai -> Rental Model (₹1,400/din)\n'
-        '• Apni khud ki EV gaadi banani hai -> Drive to Own (₹15,000/wk EMI)'
-        : 'Choose based on your goal:\n'
-        '• Zero expense risk & fixed pay -> Salary Model (₹6,000 deposit)\n'
-        '• Maximum daily cash take-home -> Rental Model (₹1,400/day)\n'
-        '• Long-term car ownership -> Drive to Own (₹15,000/week EMI)';
+    return _GeneratedAiReply(
+      isHinglish
+          ? 'Aapke goal ke hisaab se best plan:\n\n'
+          '• **Salary Model:** **$salDailyStr/day** + ₹0 charging risk.\n'
+          '• **Rental Model:** **$renDailyStr/day** highest daily cash.\n'
+          '• **Drive to Own:** **$dtoWeeklyStr/wk** + apni khud ki EV.'
+          : 'Here is how the 3 plans compare at **$estStr/day**:\n\n'
+          '• **Salary Model:** **$salDailyStr/day** with ₹0 fuel/maint. cost.\n'
+          '• **Rental Model:** **$renDailyStr/day** maximum daily take-home.\n'
+          '• **Drive to Own:** **$dtoWeeklyStr/wk** + 100% car ownership.',
+      recommendedPlanId: 'SALARY',
+    );
   }
 }

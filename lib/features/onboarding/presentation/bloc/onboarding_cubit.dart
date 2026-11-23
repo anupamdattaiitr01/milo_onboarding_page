@@ -12,7 +12,7 @@ enum AuthorizationStatus {
 
 class OnboardingState extends Equatable {
   final AuthorizationStatus authzStatus;
-  final String selectedPlanId;
+  final String? selectedPlanId;
   final double dailyRideEstimate;
   final bool isTableView;
   final String driverName;
@@ -22,8 +22,8 @@ class OnboardingState extends Equatable {
 
   const OnboardingState({
     this.authzStatus = AuthorizationStatus.unknown,
-    this.selectedPlanId = 'RENTAL',
-    this.dailyRideEstimate = 3200,
+    this.selectedPlanId,
+    this.dailyRideEstimate = 3000,
     this.isTableView = false,
     this.driverName = 'Anupam',
     this.hubCity = 'Gurugram / Delhi NCR',
@@ -34,6 +34,7 @@ class OnboardingState extends Equatable {
   OnboardingState copyWith({
     AuthorizationStatus? authzStatus,
     String? selectedPlanId,
+    bool clearSelectedPlan = false,
     double? dailyRideEstimate,
     bool? isTableView,
     String? driverName,
@@ -44,7 +45,8 @@ class OnboardingState extends Equatable {
   }) {
     return OnboardingState(
       authzStatus: authzStatus ?? this.authzStatus,
-      selectedPlanId: selectedPlanId ?? this.selectedPlanId,
+      selectedPlanId:
+      clearSelectedPlan ? null : (selectedPlanId ?? this.selectedPlanId),
       dailyRideEstimate: dailyRideEstimate ?? this.dailyRideEstimate,
       isTableView: isTableView ?? this.isTableView,
       driverName: driverName ?? this.driverName,
@@ -107,10 +109,13 @@ class OnboardingCubit extends Cubit<OnboardingState> {
           _ => AuthorizationStatus.newLead,
         };
 
+        final remotePlan = data['selected_plan'] as String?;
+
         emit(state.copyWith(
           authzStatus: mappedStatus,
-          selectedPlanId:
-          (data['selected_plan'] as String?) ?? state.selectedPlanId,
+          selectedPlanId: remotePlan ?? state.selectedPlanId,
+          clearSelectedPlan:
+          mappedStatus == AuthorizationStatus.newLead && remotePlan == null,
           driverName: (data['name'] as String?) ?? state.driverName,
           hubCity: (data['hub_city'] as String?) ?? state.hubCity,
           isSubmitting: false,
@@ -172,7 +177,7 @@ class OnboardingCubit extends Cubit<OnboardingState> {
     }
   }
 
-  /// Simulates Hub Ops approving the driver (same effect as changing `status` to `active` in Firebase Console)
+  /// Simulates Hub Ops approving the driver
   Future<void> simulateHubOpsApproval(String uid) async {
     await _database.ref('drivers/$uid').update({
       'status': 'active',
